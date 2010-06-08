@@ -20,7 +20,7 @@ class Auth_Jelly extends Auth {
 		$status = FALSE;
 
 		// Get the user from the session
-		$user = $this->session->get($this->_config['session_key']);
+		$user = $this->_session->get($this->_config['session_key']);
 
 		if ( ! is_object($user))
 		{
@@ -28,7 +28,7 @@ class Auth_Jelly extends Auth {
 			if ($this->auto_login())
 			{
 				// Success, get the user back out of the session
-				$user = $this->session->get($this->_config['session_key']);
+				$user = $this->_session->get($this->_config['session_key']);
 			}
 		}
 
@@ -118,7 +118,7 @@ class Auth_Jelly extends Auth {
 		$user = $this->_get_object($user);
 
 		// Mark the session as forced, to prevent users from changing account information
-		$session['auth_forced'] = TRUE;
+		$_SESSION['auth_forced'] = TRUE;
 
 		// Run the standard completion
 		$this->complete_login($user);
@@ -174,7 +174,7 @@ class Auth_Jelly extends Auth {
 		{
 			// Delete the autologin Cookie to prevent re-login
 			Cookie::delete('authautologin');
-
+			
 			// Clear the autologin token from the database
 			$token = Jelly::select('user_token')->where('token', '=', $token)->limit(1)->load();
 
@@ -201,7 +201,7 @@ class Auth_Jelly extends Auth {
 	{
 		// Make sure we have a user object
 		$user = $this->_get_object($user);
-
+		
 		return $user->password;
 	}
 
@@ -249,14 +249,14 @@ class Auth_Jelly extends Auth {
 
 	/**
 	 * Convert a unique identifier string to a user object
-	 *
+	 * 
 	 * @param mixed $user
 	 * @return Model_User
 	 */
 	protected function _get_object($user)
 	{
 		static $current;
-
+		
 		//make sure the user is loaded only once.
 		if ( ! is_object($current) AND is_string($user))
 		{
@@ -264,7 +264,7 @@ class Auth_Jelly extends Auth {
 			$current = Jelly::select('user')->where('username', '=', $user)->load();
 		}
 
-		if ($user instanceof Model_User AND $user->loaded())
+		if ($user instanceof Model_User AND $user->loaded()) 
 		{
 			$current = $user;
 		}
