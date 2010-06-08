@@ -7,20 +7,6 @@
  * @author     Israel Canasa
  */
 class Auth_Jelly extends Auth {
-	/**
-	 * @var	object	Session instance
-	 */
-	protected $session;
-
-	/**
-	 * Overloaded constructor to initialize session instance
-	 */
-	public function __construct($config = array())
-	{
-		$this->session = Session::instance();
-
-		parent::__construct($config);
-	}
 
 	/**
 	 * Checks if a session is active.
@@ -132,7 +118,7 @@ class Auth_Jelly extends Auth {
 		$user = $this->_get_object($user);
 
 		// Mark the session as forced, to prevent users from changing account information
-		Session::instance()->set('auth_forced', TRUE);
+		$session['auth_forced'] = TRUE;
 
 		// Run the standard completion
 		$this->complete_login($user);
