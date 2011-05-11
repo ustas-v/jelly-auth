@@ -4,106 +4,107 @@
  * @package Jelly Auth
  * @author	Israel Canasa
  */
-class Model_Auth_User extends Jelly_Model
+abstract class Model_Auth_User extends Jelly_Model
 {
-	public static function initialize(Jelly_Meta $meta)
+    public static function initialize(Jelly_Meta $meta)
     {
-		$meta->name_key('username')
-			->sorting(array('username' => 'ASC'))
-			->fields(array(
-			'id' => new Field_Primary,
-			'username' => new Field_String(array(
+        $meta->table('users')
+        ->name_key('username')
+        ->sorting(array('username' => 'ASC'))
+        
+        // Fields defined by the model
+        ->fields(array(
+            'id' => Jelly::field('primary'),
+            'email' => Jelly::field('email', array(
+				'label' => 'E-mail',
+				'rules' => array(
+                    array('not_empty'),
+                    array('min_length', array(':value', 4)),
+                    array('max_length', array(':value', 127)),
+                ),
 				'unique' => TRUE,
+            )),
+            'username' => Jelly::field('string', array(
+				'label' => 'Username',
 				'rules' => array(
-						'not_empty' => array(TRUE),
-						'max_length' => array(32),
-						'min_length' => array(3),
-						'regex' => array('/^[\pL_.-]+$/ui')
-					)
-				)),
-			'password' => new Field_Password(array(
-				'hash_with' => array(Auth::instance(), 'hash_password'),
+                    array('not_empty'),
+                    array('min_length', array(':value', 4)),
+                    array('max_length', array(':value', 32)),
+                    array('regex', array(':value', '/^[-\pL\pN_.]++$/uD')),
+                ),
+				'unique' => TRUE,
+            )),
+			'password' => Jelly::field('password', array(
+				'label' => 'Password',
 				'rules' => array(
-					'not_empty' => array(TRUE),
-					'max_length' => array(50),
-					'min_length' => array(6)
-				)
-			)),
-			'password_confirm' => new Field_Password(array(
-				'in_db' => FALSE,
-				'callbacks' => array(
-					'matches' => array('Model_Auth_User', 'check_password_matches')
-				),
+                    array('not_empty'),
+                    array('min_length', array(':value', 8)),
+                ),
+				'hash_with' => array(Auth::instance(), 'hash'),
+            )),
+			'password_confirm' => Jelly::field('password', array(
+			    'in_db'	=> FALSE,
+				'label' => 'Password confirm',
 				'rules' => array(
-					'not_empty' => array(TRUE),
-					'max_length' => array(50),
-					'min_length' => array(6)
-				)
-			)),
-			'email' => new Field_Email(array(
-				'unique' => TRUE
-			)),
-			'logins' => new Field_Integer(array(
-				'default' => 0
-			)),
-			'last_login' => new Field_Timestamp,
-			'tokens' => new Field_HasMany(array(
-				'foreign' => 'user_token'
-			)),
-			'roles' => new Field_ManyToMany
-		));
+                    array('not_empty'),
+                    array('matches', array(':validation', 'password', ':field')),
+                ),
+            )),
+			'logins' => Jelly::field('integer', array(
+				'default' => 0,
+				'convert_empty' => TRUE,
+				'empty_value' => 0,
+            )),
+			'last_login' => Jelly::field('timestamp'),
+
+			
+            // Relationships to other models
+            'user_tokens' => Jelly::field('hasmany', array(
+				'foreign' => 'user_token',
+            )),
+            'roles' => Jelly::field('manytomany', array(
+            	'through' => array(
+            		'model' => 'users_has_roles',
+            		'columns' => array('user_id', 'role_id')
+                )
+            )),
+        ));
     }
 
-	/**
-	 * Validate callback wrapper for checking password match
-	 * @param Validate $array
-	 * @param string   $field
-	 * @return void
-	 */
-	public static function check_password_matches(Validate $array, $field)
-	{
-		$auth = Auth::instance();
-		
-		if ($array['password'] !== $array[$field])
-		{
-			// Re-use the error messge from the 'matches' rule in Validate
-			$array->error($field, 'matches', array('param1' => 'password'));
-		}
-	}
-	
-	/**
-	 * Check if user has a particular role
-	 * @param mixed $role 	Role to test for, can be Model_Role object, string role name of integer role id
-	 * @return bool			Whether or not the user has the requested role
-	 */
-	public function has_role($role)
-	{
-		// Check what sort of argument we have been passed
-		if ($role instanceof Model_Role)
-		{
-			$key = 'id';
-			$val = $role->id;
-		}
-		elseif (is_string($role))
-		{
-			$key = 'name';
-			$val = $role;
-		}
-		else
-		{
-			$key = 'id';
-			$val = (int) $role;
-		}
 
-		foreach ($this->roles as $user_role)
-		{	
-			if ($user_role->{$key} === $val)
-			{
-				return TRUE;
-			}
-		}
-		
-		return FALSE;
-	}
-	
+    /**
+     * Check if user has a particular role
+     * @param mixed $role 	Role to test for, can be Model_Role object, string role name of integer role id
+     * @return bool			Whether or not the user has the requested role
+     */
+    public function has_role($role)
+    {
+        // Check what sort of argument we have been passed
+        if ($role instanceof Model_Role)
+        {
+            $key = 'id';
+            $val = $role->id;
+        }
+        elseif (is_string($role))
+        {
+            $key = 'name';
+            $val = $role;
+        }
+        else
+        {
+            $key = 'id';
+            $val = (int) $role;
+        }
+
+        foreach ($this->roles as $user_role)
+        {
+            if ($user_role->{$key} === $val)
+            {
+                return TRUE;
+            }
+        }
+
+        return FALSE;
+    }
+
 } // End Model_Auth_User

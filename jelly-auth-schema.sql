@@ -1,48 +1,95 @@
-CREATE TABLE IF NOT EXISTS `roles` (
-  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
-  `name` varchar(32) NOT NULL,
-  `description` varchar(255) NOT NULL,
-  PRIMARY KEY  (`id`),
-  UNIQUE KEY `uniq_name` (`name`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
- 
-INSERT INTO `roles` (`id`, `name`, `description`) VALUES(1, 'login', 'Login privileges, granted after account confirmation');
-INSERT INTO `roles` (`id`, `name`, `description`) VALUES(2, 'admin', 'Administrative user, has access to everything.');
- 
-CREATE TABLE IF NOT EXISTS `roles_users` (
-  `user_id` int(11) UNSIGNED NOT NULL,
-  `role_id` int(11) UNSIGNED NOT NULL,
-  PRIMARY KEY  (`user_id`,`role_id`),
-  KEY `fk_role_id` (`role_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
- 
-CREATE TABLE IF NOT EXISTS `users` (
-  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
-  `email` varchar(127) NOT NULL,
-  `username` varchar(32) NOT NULL DEFAULT '',
-  `password` char(50) NOT NULL,
-  `logins` int(10) UNSIGNED NOT NULL DEFAULT '0',
-  `last_login` int(10) UNSIGNED,
-  PRIMARY KEY  (`id`),
-  UNIQUE KEY `uniq_username` (`username`),
-  UNIQUE KEY `uniq_email` (`email`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
- 
-CREATE TABLE IF NOT EXISTS `user_tokens` (
-  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
-  `user_id` int(11) UNSIGNED NOT NULL,
-  `user_agent` varchar(40) NOT NULL,
-  `token` varchar(32) NOT NULL,
-  `created` int(10) UNSIGNED NOT NULL,
-  `expires` int(10) UNSIGNED NOT NULL,
-  PRIMARY KEY  (`id`),
-  UNIQUE KEY `uniq_token` (`token`),
-  KEY `fk_user_id` (`user_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
- 
-ALTER TABLE `roles_users`
-  ADD CONSTRAINT `roles_users_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `roles_users_ibfk_2` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE;
- 
-ALTER TABLE `user_tokens`
-  ADD CONSTRAINT `user_tokens_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
+SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
+SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='TRADITIONAL';
+
+-- -----------------------------------------------------
+-- Table `users`
+-- -----------------------------------------------------
+CREATE  TABLE IF NOT EXISTS `users` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT ,
+  `email` VARCHAR(127) NOT NULL ,
+  `username` VARCHAR(32) NOT NULL DEFAULT '' ,
+  `password` CHAR(64) NOT NULL ,
+  `logins` INT UNSIGNED NOT NULL DEFAULT 0 ,
+  `last_login` INT UNSIGNED NULL ,
+  PRIMARY KEY (`id`) ,
+  UNIQUE INDEX `UNIQUE_username` (`username` ASC) ,
+  UNIQUE INDEX `UNIQUE_email` (`email` ASC) )
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8
+COLLATE = utf8_unicode_ci;
+
+
+-- -----------------------------------------------------
+-- Table `roles`
+-- -----------------------------------------------------
+CREATE  TABLE IF NOT EXISTS `roles` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT ,
+  `name` VARCHAR(32) NOT NULL ,
+  `description` VARCHAR(255) NOT NULL ,
+  PRIMARY KEY (`id`) ,
+  UNIQUE INDEX `UNIQUE_name` (`name` ASC) )
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8
+COLLATE = utf8_unicode_ci;
+
+
+-- -----------------------------------------------------
+-- Table `users_tokens`
+-- -----------------------------------------------------
+CREATE  TABLE IF NOT EXISTS `users_tokens` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT ,
+  `user_id` INT UNSIGNED NOT NULL ,
+  `user_agent` VARCHAR(40) NOT NULL ,
+  `token` VARCHAR(32) NOT NULL ,
+  `type` VARCHAR(100) NOT NULL ,
+  `created` INT UNSIGNED NOT NULL ,
+  `expires` INT UNSIGNED NOT NULL ,
+  PRIMARY KEY (`id`) ,
+  INDEX `fk_user_tokens_users` (`user_id` ASC) ,
+  UNIQUE INDEX `UNIQUE_token` (`token` ASC) ,
+  CONSTRAINT `fk_user_tokens_users`
+    FOREIGN KEY (`user_id` )
+    REFERENCES `users` (`id` )
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `users_has_roles`
+-- -----------------------------------------------------
+CREATE  TABLE IF NOT EXISTS `users_has_roles` (
+  `user_id` INT UNSIGNED NOT NULL ,
+  `role_id` INT UNSIGNED NOT NULL ,
+  PRIMARY KEY (`user_id`, `role_id`) ,
+  INDEX `fk_users_has_roles_roles` (`role_id` ASC) ,
+  INDEX `fk_users_has_roles_users` (`user_id` ASC) ,
+  CONSTRAINT `fk_users_has_roles_users`
+    FOREIGN KEY (`user_id` )
+    REFERENCES `users` (`id` )
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_users_has_roles_roles`
+    FOREIGN KEY (`role_id` )
+    REFERENCES `roles` (`id` )
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8
+COLLATE = utf8_unicode_ci;
+
+
+
+SET SQL_MODE=@OLD_SQL_MODE;
+SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
+SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
+
+-- -----------------------------------------------------
+-- Data for table `roles`
+-- -----------------------------------------------------
+START TRANSACTION;
+INSERT INTO `roles` (`id`, `name`, `description`) VALUES (1, 'login', 'Login privileges, granted after account confirmation.');
+INSERT INTO `roles` (`id`, `name`, `description`) VALUES (2, 'admin', 'Administrative user, has access to everything.');
+
+COMMIT;

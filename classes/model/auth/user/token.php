@@ -4,25 +4,29 @@
  * @package Jelly Auth
  * @author	Israel Canasa
  */
-class Model_Auth_User_Token extends Jelly_Model
+abstract class Model_Auth_User_Token extends Jelly_Model
 {
  	public static function initialize(Jelly_Meta $meta)
 	{
-		$meta->fields(array(
-				'id' => new Field_Primary,
-				'token' => new Field_String(array(
-					'unique' => TRUE,
-					'rules' => array(
-						'max_length' => array(32)
-					)
-				)),
-				'user' => new Field_BelongsTo,
-				'user_agent' => new Field_String,
-				'created' => new Field_Timestamp(array(
-					'auto_now_create' => TRUE,
-				)),
-				'expires' => new Field_Timestamp,
-			));
+        // The table the model is attached to
+        $meta->table('users_tokens');
+
+        // Fields defined by the model
+        $meta->fields(array(
+            'id' => Jelly::field('primary'),
+			'user_agent' => Jelly::field('string'),
+			'token' => Jelly::field('string', array(
+				'unique' => TRUE,
+			)),
+			'type' => Jelly::field('string'),
+			'created' => Jelly::field('timestamp', array(
+				'auto_now_create' => TRUE,
+			)),
+			'expires' => Jelly::field('timestamp'),
+
+            // Relationships to other models
+            'user' => Jelly::field('belongsto'),
+        ));
 		
 		if (mt_rand(1, 100) === 1)
 		{
