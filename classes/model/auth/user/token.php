@@ -18,7 +18,6 @@ abstract class Model_Auth_User_Token extends Jelly_Model
 			'token' => Jelly::field('string', array(
 				'unique' => TRUE,
 			)),
-			'type' => Jelly::field('string'),
 			'created' => Jelly::field('timestamp', array(
 				'auto_now_create' => TRUE,
 			)),

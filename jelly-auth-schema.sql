@@ -42,7 +42,6 @@ CREATE  TABLE IF NOT EXISTS `users_tokens` (
   `user_id` INT UNSIGNED NOT NULL ,
   `user_agent` VARCHAR(40) NOT NULL ,
   `token` VARCHAR(32) NOT NULL ,
-  `type` VARCHAR(100) NOT NULL ,
   `created` INT UNSIGNED NOT NULL ,
   `expires` INT UNSIGNED NOT NULL ,
   PRIMARY KEY (`id`) ,
